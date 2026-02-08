@@ -1,5 +1,6 @@
 streamlit
-transformers
+pandas
+nltk
+openai-whisper
 torch
-sentencepiece
-scikit-learn
+ffmpeg-python
