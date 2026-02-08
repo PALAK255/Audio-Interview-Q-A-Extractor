@@ -31,11 +31,18 @@ if audio_file is not None:
 
     st.info("⏳ Transcribing audio… please wait")
 
-    # ✅ FAST MODEL (CPU friendly)
-    model = whisper.load_model("base")
+    # ✅ STREAMLIT-CLOUD SAFE MODEL
+    model = WhisperModel(
+        "base",
+        device="cpu",
+        compute_type="int8"
+    )
 
-    result = model.transcribe(audio_path, language="en")
-    raw_text = result["text"]
+    segments, info = model.transcribe(audio_path)
+
+    raw_text = ""
+    for segment in segments:
+        raw_text += segment.text + " "
 
     st.success("✅ Transcription completed")
 
@@ -82,7 +89,6 @@ if audio_file is not None:
         st.subheader("📊 Extracted Q&A")
         st.dataframe(df, use_container_width=True)
 
-        # Download CSV
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             "⬇️ Download Q&A as CSV",
@@ -90,4 +96,3 @@ if audio_file is not None:
             file_name="interview_qa.csv",
             mime="text/csv"
         )
-
