@@ -1,6 +1,5 @@
 streamlit
 pandas
 nltk
-openai-whisper
+faster-whisper
 torch
-ffmpeg-python
