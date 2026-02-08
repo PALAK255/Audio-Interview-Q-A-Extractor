@@ -1,30 +1,26 @@
 import streamlit as st
+import whisper
 import pandas as pd
 import nltk
 import os
 from nltk.tokenize import sent_tokenize
-from faster_whisper import WhisperModel
 
-# -------------------- NLTK SETUP --------------------
+# Download punkt once
 nltk.download("punkt")
 
-# -------------------- STREAMLIT CONFIG --------------------
-st.set_page_config(
-    page_title="Audio Interview Q&A Extractor",
-    layout="centered"
-)
+st.set_page_config(page_title="Audio Interview Q&A Extractor", layout="centered")
 
 st.title("🎤 Audio Interview Q&A Extractor")
 st.write("Upload interview audio → get structured Question & Answer table")
 
-# -------------------- FILE UPLOAD --------------------
+# Upload audio
 audio_file = st.file_uploader(
     "Upload interview audio file",
     type=["mp3", "wav", "m4a"]
 )
 
 if audio_file is not None:
-    # Save uploaded audio
+    # Save audio
     os.makedirs("temp_audio", exist_ok=True)
     audio_path = os.path.join("temp_audio", audio_file.name)
 
@@ -33,29 +29,21 @@ if audio_file is not None:
 
     st.audio(audio_file)
 
-    # -------------------- TRANSCRIPTION --------------------
     st.info("⏳ Transcribing audio… please wait")
 
-    # ✅ FAST & CLOUD-SAFE MODEL
-    model = WhisperModel(
-        "base",
-        device="cpu",
-        compute_type="int8"
-    )
+    # ✅ FAST MODEL (CPU friendly)
+    model = whisper.load_model("base")
 
-    segments, info = model.transcribe(audio_path)
-
-    raw_text = ""
-    for segment in segments:
-        raw_text += segment.text + " "
+    result = model.transcribe(audio_path, language="en")
+    raw_text = result["text"]
 
     st.success("✅ Transcription completed")
 
-    # -------------------- SHOW TRANSCRIPT --------------------
+    # Show transcript
     st.subheader("📝 Raw Transcript")
     st.text_area("Transcript", raw_text, height=250)
 
-    # -------------------- Q&A EXTRACTION --------------------
+    # Q&A Extraction
     st.info("🔍 Extracting Questions & Answers")
 
     sentences = sent_tokenize(raw_text)
@@ -83,7 +71,6 @@ if audio_file is not None:
                 answers.append(sent)
                 current_question = ""
 
-    # -------------------- OUTPUT --------------------
     if len(questions) == 0:
         st.warning("⚠️ No clear Q&A detected. Audio may be monologue-based.")
     else:
@@ -95,6 +82,7 @@ if audio_file is not None:
         st.subheader("📊 Extracted Q&A")
         st.dataframe(df, use_container_width=True)
 
+        # Download CSV
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             "⬇️ Download Q&A as CSV",
@@ -102,4 +90,3 @@ if audio_file is not None:
             file_name="interview_qa.csv",
             mime="text/csv"
         )
-
