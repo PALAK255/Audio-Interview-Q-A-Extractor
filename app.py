@@ -1,9 +1,9 @@
 import streamlit as st
-import whisper
 import pandas as pd
 import nltk
 import os
 from nltk.tokenize import sent_tokenize
+from faster_whisper import WhisperModel
 
 # Download punkt once
 nltk.download("punkt")
@@ -90,3 +90,4 @@ if audio_file is not None:
             file_name="interview_qa.csv",
             mime="text/csv"
         )
+
